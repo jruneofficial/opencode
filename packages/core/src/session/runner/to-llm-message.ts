@@ -19,6 +19,11 @@ import type { FileAttachment } from "@opencode/schema/prompt"
 
 const imageMimes = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"])
 
+// Video and audio are media the model reads natively when its capabilities say so; other binary
+// types (AVIF, BMP, …) stay out of the request until they are as broadly supported as these.
+const modelMedia = (mime: string) =>
+  mime === "application/pdf" || imageMimes.has(mime) || mime.startsWith("video/") || mime.startsWith("audio/")
+
 const media = (file: FileAttachment): MediaPart => ({
   type: "media",
   media: Media.base64(file.data, file.mime),
@@ -63,7 +68,7 @@ const directoryAttachment = (file: FileAttachment): TextPart => ({
 const attachmentContent = (file: FileAttachment): Array<TextPart | MediaPart> => {
   if (file.mime === "text/plain") return [textAttachment(file)]
   if (file.mime === "application/x-directory") return [directoryAttachment(file)]
-  if (imageMimes.has(file.mime) || file.mime === "application/pdf") {
+  if (modelMedia(file.mime)) {
     const location = attachmentLocation(file)
     return [...(location === undefined ? [] : [Message.text(`Attached file: ${location}`)]), media(file)]
   }

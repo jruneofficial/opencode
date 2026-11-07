@@ -288,14 +288,40 @@ function native(mime: string, input: AttachmentDestination["input"]) {
 
   if (mime === "application/pdf") return input.pdf
 
+  if (mime.startsWith("video/")) return input.video
+
+  if (mime.startsWith("audio/")) return input.audio
+
   return false
 }
 
-const imageExtensions = new Map([
+const extensionMimes = new Map([
+  ["3gp", "video/3gpp"],
+  ["aac", "audio/aac"],
+  ["aif", "audio/aiff"],
+  ["aiff", "audio/aiff"],
+  ["flac", "audio/flac"],
+  ["flv", "video/x-flv"],
   ["gif", "image/gif"],
   ["jpeg", "image/jpeg"],
   ["jpg", "image/jpeg"],
+  ["m4a", "audio/mp4"],
+  ["m4v", "video/x-m4v"],
+  ["mid", "audio/midi"],
+  ["midi", "audio/midi"],
+  ["mkv", "video/x-matroska"],
+  ["mov", "video/quicktime"],
+  ["mp3", "audio/mpeg"],
+  ["mp4", "video/mp4"],
+  ["mpeg", "video/mpeg"],
+  ["mpg", "video/mpeg"],
+  ["oga", "audio/ogg"],
+  ["ogg", "audio/ogg"],
+  ["ogv", "video/ogg"],
+  ["opus", "audio/opus"],
   ["png", "image/png"],
+  ["wav", "audio/wav"],
+  ["webm", "video/webm"],
   ["webp", "image/webp"],
 ])
 
@@ -314,10 +340,11 @@ const textMimes = new Set([
 async function attachmentMime(file: File) {
   const type = file.type.split(";", 1)[0]?.trim().toLowerCase() ?? ""
 
-  if (imageMimes.has(type) || type === "application/pdf") return type
+  if (imageMimes.has(type) || type === "application/pdf" || type.startsWith("video/") || type.startsWith("audio/"))
+    return type
   const index = file.name.lastIndexOf(".")
   const suffix = index === -1 ? "" : file.name.slice(index + 1).toLowerCase()
-  const fallback = imageExtensions.get(suffix) ?? (suffix === "pdf" ? "application/pdf" : undefined)
+  const fallback = extensionMimes.get(suffix) ?? (suffix === "pdf" ? "application/pdf" : undefined)
 
   if ((!type || type === "application/octet-stream") && fallback) return fallback
 

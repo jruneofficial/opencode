@@ -134,7 +134,7 @@ export function make(input: {
         agentCapabilities: {
           loadSession: true,
           mcpCapabilities: { http: true, sse: false },
-          promptCapabilities: { embeddedContext: true, image: true },
+          promptCapabilities: { embeddedContext: true, image: true, audio: true },
           sessionCapabilities: { additionalDirectories: {}, close: {}, delete: {}, fork: {}, list: {}, resume: {} },
           _meta: { [ACPCapabilities.ChildSessionUpdates]: true },
         },

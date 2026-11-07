@@ -94,7 +94,7 @@ OpenCode's `initialize` response includes these agent capabilities:
 {
   "loadSession": true,
   "mcpCapabilities": { "http": true, "sse": false },
-  "promptCapabilities": { "embeddedContext": true, "image": true },
+  "promptCapabilities": { "embeddedContext": true, "image": true, "audio": true },
   "sessionCapabilities": {
     "additionalDirectories": {},
     "close": {},
@@ -177,8 +177,7 @@ change. It also sends one when another client changes the session's model or age
 
 ### Prompt content
 
-Prompts can contain text, images, embedded resources, and resource links. OpenCode ignores audio blocks. It handles the
-other blocks like this:
+Prompts can contain text, images, audio, embedded resources, and resource links. OpenCode handles the blocks like this:
 
 | Block                                                 | What OpenCode does                                                                     |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------- |
@@ -187,6 +186,7 @@ other blocks like this:
 | `text` with audience `user` only                      | Leaves it out of the model's input.                                                    |
 | `image` with `data`                                   | Attaches it to the prompt.                                                             |
 | `image` with only `uri`                               | Handles it as a resource link.                                                         |
+| `audio` with `data`                                   | Attaches it to the prompt.                                                             |
 | `resource` with `text`                                | Inlines the text after the resource's path or URI.                                     |
 | `resource` with `blob`                                | Attaches it if it has a `mimeType`. Drops it otherwise.                                |
 | `resource_link` to a `file://` URI                    | Attaches the file. Sends a Markdown link instead if the file is missing or unreadable. |

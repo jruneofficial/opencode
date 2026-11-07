@@ -76,6 +76,20 @@ describe("prompt local attachments", () => {
     })
   })
 
+  test("reads video and audio attachments as bytes", async () => {
+    const content = new Uint8Array([1, 2, 3])
+    expect(await readLocalAttachmentWith(files({ mime: "video/mp4", bytes: content }), "/tmp/clip.mp4")).toEqual({
+      type: "binary",
+      mime: "video/mp4",
+      content,
+    })
+    expect(await readLocalAttachmentWith(files({ mime: "audio/mpeg", bytes: content }), "/tmp/song.mp3")).toEqual({
+      type: "binary",
+      mime: "audio/mpeg",
+      content,
+    })
+  })
+
   test("ignores unsupported and unreadable local files", async () => {
     expect(await readLocalAttachmentWith(files({ mime: "text/plain" }), "/tmp/file.txt")).toBeUndefined()
     expect(
@@ -119,6 +133,18 @@ describe("prompt local attachments", () => {
         { type: "file", uri: "data:application/pdf;base64,BAUG", filename: "two file.pdf", path: pdf },
       ])
     }
+  })
+
+  test("resolves pasted video and audio paths as media attachments", async () => {
+    await using tmp = await tmpdir()
+    const video = path.join(tmp.path, "clip.mp4")
+    const audio = path.join(tmp.path, "song.mp3")
+    await Promise.all([Bun.write(video, new Uint8Array([1, 2, 3])), Bun.write(audio, new Uint8Array([4, 5, 6]))])
+
+    expect(await resolvePastedAttachments(`"${video}" "${audio}"`, process.platform)).toEqual([
+      { type: "file", uri: "data:video/mp4;base64,AQID", filename: "clip.mp4", path: video },
+      { type: "file", uri: "data:audio/mpeg;base64,BAUG", filename: "song.mp3", path: audio },
+    ])
   })
 
   test("falls back to plain text for unsupported or incomplete drops", async () => {

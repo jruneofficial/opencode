@@ -64,6 +64,15 @@ describe("prompt attachments", () => {
     expect(promptAttachmentLabel(files, { uri: "data:application/pdf;base64,BBB" })).toBe("[PDF 1]")
   })
 
+  test("labels video and audio attachments independently per kind", () => {
+    expect(promptAttachmentLabel([], { uri: "data:video/mp4;base64,AAA" })).toBe("[Video 1]")
+    expect(promptAttachmentLabel([], { uri: "data:audio/mpeg;base64,AAA" })).toBe("[Audio 1]")
+
+    const files = [{ uri: "data:video/mp4;base64,AAA", mention: { start: 0, end: 9, text: "[Video 1]" } }]
+    expect(promptAttachmentLabel(files, { uri: "data:audio/mpeg;base64,BBB" })).toBe("[Audio 1]")
+    expect(promptAttachmentLabel(files, { uri: "data:video/mp4;base64,BBB" })).toBe("[Video 2]")
+  })
+
   test("does not reuse a label when attachment metadata differs", () => {
     const uri = "data:image/png;base64,AAA"
     const files = [{ uri, name: "one.png", mention: { start: 0, end: 9, text: "[Image 1]" } }]

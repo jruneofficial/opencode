@@ -32,6 +32,11 @@ function contentBlockToParts(block: ContentBlock): PromptPart[] {
       if (url.startsWith("data:")) return [{ type: "file", url, filename, mime: block.mimeType }]
       return [resourceLinkToPart({ uri: url, name: filename, mimeType: block.mimeType })]
     }
+    case "audio": {
+      return [
+        { type: "file", url: `data:${block.mimeType};base64,${block.data}`, filename: "audio", mime: block.mimeType },
+      ]
+    }
     case "resource_link":
       return [resourceLinkToPart(block)]
     case "resource":
@@ -109,6 +114,17 @@ export function partsToContentChunks(parts: readonly ReplayPart[]): ContentChunk
             mimeType: mime,
             data,
             uri: pathToFileURL(part.filename ?? "image").href,
+          },
+        },
+      ]
+    }
+    if (mime.startsWith("audio/")) {
+      return [
+        {
+          content: {
+            type: "audio",
+            mimeType: mime,
+            data,
           },
         },
       ]

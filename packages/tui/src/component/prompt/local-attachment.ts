@@ -71,14 +71,44 @@ export function promptFilesForServer<T extends { uri: string; path?: string }>(
 }
 
 const mimeTypes: Record<string, string> = {
+  ".3gp": "video/3gpp",
+  ".aac": "audio/aac",
+  ".aif": "audio/aiff",
+  ".aiff": "audio/aiff",
   ".avif": "image/avif",
+  ".flac": "audio/flac",
+  ".flv": "video/x-flv",
   ".gif": "image/gif",
   ".jpeg": "image/jpeg",
   ".jpg": "image/jpeg",
+  ".m4a": "audio/mp4",
+  ".m4v": "video/x-m4v",
+  ".mid": "audio/midi",
+  ".midi": "audio/midi",
+  ".mkv": "video/x-matroska",
+  ".mov": "video/quicktime",
+  ".mp3": "audio/mpeg",
+  ".mp4": "video/mp4",
+  ".mpeg": "video/mpeg",
+  ".mpg": "video/mpeg",
+  ".oga": "audio/ogg",
+  ".ogg": "audio/ogg",
+  ".ogv": "video/ogg",
+  ".opus": "audio/opus",
   ".pdf": "application/pdf",
   ".png": "image/png",
   ".svg": "image/svg+xml",
+  ".wav": "audio/wav",
+  ".webm": "video/webm",
   ".webp": "image/webp",
+}
+
+// Pasted paths become attachments only for media a model request can carry: images, video, audio,
+// and PDFs. Everything else stays a plain text paste.
+function admittedMime(mime: string) {
+  return (
+    mime.startsWith("image/") || mime.startsWith("video/") || mime.startsWith("audio/") || mime === "application/pdf"
+  )
 }
 
 async function readFileBounded(file: string, maxBytes: number) {
@@ -176,7 +206,7 @@ export async function readLocalAttachmentWith(
 ): Promise<LocalAttachment | undefined> {
   const mime = await files.mime(path).catch(() => undefined)
   if (!mime) return undefined
-  if (!mime.startsWith("image/") && mime !== "application/pdf") return undefined
+  if (!admittedMime(mime)) return undefined
   if (mime === "image/svg+xml") {
     const content = await files.readText(path, maxBytes).catch(() => undefined)
     if (!content || Buffer.byteLength(content) > maxBytes) return undefined

@@ -524,6 +524,31 @@ Earlier work
     ])
   })
 
+  test("uses materialized video and audio data as provider media", () => {
+    const data = Base64.make("AAECAw==")
+    const messages = toLLMMessages(
+      [
+        SessionMessage.User.make({
+          id: id("user-video-audio"),
+          type: "user",
+          text: "Watch this clip",
+          files: [
+            FileAttachment.make({ data, mime: "video/mp4", source: { type: "inline" }, name: "clip.mp4" }),
+            FileAttachment.make({ data, mime: "audio/mpeg", source: { type: "inline" }, name: "song.mp3" }),
+          ],
+          time: { created },
+        }),
+      ],
+      model,
+    )
+
+    expect(messages[0]?.content).toEqual([
+      { type: "text", text: "Watch this clip" },
+      { type: "media", media: Media.base64(data, "video/mp4"), filename: "clip.mp4" },
+      { type: "media", media: Media.base64(data, "audio/mpeg"), filename: "song.mp3" },
+    ])
+  })
+
   test("exposes admitted local image source paths before provider media", () => {
     const data = Base64.make("AAECAw==")
     const location = path.resolve("/project/IMG_3480.JPG")

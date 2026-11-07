@@ -150,6 +150,10 @@ const TRANSCRIPT_LEVELS = [0, OUTPUTS_CLIPPED, OUTPUTS_REMOVED, USER_ONLY, OMITT
 const TRANSCRIPT_CLIP = 2_000
 const IMAGE_TOKEN_ESTIMATE = 1_500
 const PDF_TOKEN_ESTIMATE = 2_000
+// Providers decode media at their own sampling rate, so these stand in for duration metadata the
+// admission path does not extract. They err high enough to push compaction before the window fills.
+const AUDIO_TOKEN_ESTIMATE = 2_000
+const VIDEO_TOKEN_ESTIMATE = 4_000
 /**
  * Tokens before the ceiling at which a background summary starts. Writing one takes 30–60 s, and in that time the
  * conversation grows by a few thousand tokens at the median but by 25k or more one time in twenty, when large file
@@ -1267,5 +1271,7 @@ const estimateMedia = (mime: string) => {
   const type = mime.toLowerCase()
   if (type.startsWith("image/")) return IMAGE_TOKEN_ESTIMATE
   if (type === "application/pdf") return PDF_TOKEN_ESTIMATE
+  if (type.startsWith("audio/")) return AUDIO_TOKEN_ESTIMATE
+  if (type.startsWith("video/")) return VIDEO_TOKEN_ESTIMATE
   return 0
 }

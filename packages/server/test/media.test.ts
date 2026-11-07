@@ -12,6 +12,7 @@ import { ContentHeaders } from "../src/content-headers"
 import { ServerFetch } from "../src/fetch"
 
 const png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+const mp4 = Buffer.from("ftypisom placeholder video bytes for the media route").toString("base64")
 const text = Buffer.from("workspace file contents").toString("base64")
 const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>').toString("base64")
 const html = Buffer.from("<!doctype html><script>alert(1)</script>").toString("base64")
@@ -32,6 +33,7 @@ const user: SessionMessageInfo = {
     },
     { data: svg, mime: "image/svg+xml", source: { type: "inline" }, name: "xss.svg" },
     { data: html, mime: "text/html", source: { type: "inline" }, name: "xss.html" },
+    { data: mp4, mime: "video/mp4", source: { type: "inline" }, name: "clip.mp4" },
   ],
   time: { created: 100 },
 }
@@ -137,6 +139,13 @@ it.live("serves stored media as refs only to clients that opt in while experimen
                 name: "xss.html",
                 bytes: size(html),
               },
+              {
+                uri: media(mp4),
+                mime: "video/mp4",
+                source: { type: "inline" },
+                name: "clip.mp4",
+                bytes: size(mp4),
+              },
             ],
           },
           {
@@ -158,7 +167,7 @@ it.live("serves stored media as refs only to clients that opt in while experimen
           },
         ])
         const single: unknown = await opted.session.message.get({ sessionID, messageID: "msg_media_user" })
-        expect(single).toMatchObject({ files: [{ uri: media(png) }, { uri: media(text) }, {}, {}] })
+        expect(single).toMatchObject({ files: [{ uri: media(png) }, { uri: media(text) }, {}, {}, {}] })
         expect(await plain.session.message.get({ sessionID, messageID: "msg_media_user" })).toEqual(user)
         expect((await opted.experimental.session.export({ sessionID })).messages).toEqual([user, assistant])
 
@@ -179,6 +188,10 @@ it.live("serves stored media as refs only to clients that opt in while experimen
           expect(response.headers.get("content-security-policy")).toBe(ContentHeaders.CONTENT_SECURITY_POLICY)
           expect(Buffer.from(await response.arrayBuffer()).toString("base64")).toBe(unsafe)
         }
+        const video = await handler(new Request(route(mp4)))
+        expect(video.status).toBe(200)
+        expect(video.headers.get("content-type")).toBe("video/mp4")
+        expect(Buffer.from(await video.arrayBuffer()).toString("base64")).toBe(mp4)
         const cached = await handler(new Request(route(png), { headers: { "If-None-Match": `W/"${hash(png)}"` } }))
         expect(cached.status).toBe(304)
         expect(cached.headers.get("etag")).toBe(`"${hash(png)}"`)

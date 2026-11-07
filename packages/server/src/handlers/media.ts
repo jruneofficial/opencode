@@ -5,7 +5,22 @@ import { Effect } from "effect"
 import { type HttpServerRequest, HttpServerResponse } from "effect/http"
 import { ContentHeaders } from "../content-headers"
 
-const INLINE_IMAGE_MIMES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"])
+// Blobs clients can render in place: the images browsers decode everywhere, plus the video and
+// audio types providers accept as prompt input. Anything else downloads as an octet stream.
+const INLINE_MIMES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/mp4",
+  "audio/ogg",
+  "audio/flac",
+])
 const CACHE_CONTROL = "private, max-age=31536000, immutable"
 
 /** `media.get` in the `server.experimental` group; serves only blobs a message or inbox item still references. */
@@ -17,7 +32,7 @@ export const makeMediaGet = Effect.gen(function* () {
       const blob = yield* SessionBlob.read(db, hash)
       if (!blob) return yield* new FileNotFoundError({ path, message: `Media blob not found: ${hash}` })
       const etag = `"${hash}"`
-      const inline = INLINE_IMAGE_MIMES.has(blob.mime)
+      const inline = INLINE_MIMES.has(blob.mime)
       const headers = {
         "cache-control": CACHE_CONTROL,
         etag,
